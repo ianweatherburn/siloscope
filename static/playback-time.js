@@ -26,7 +26,7 @@ const PlaybackTime = (() => {
 
   function endsLabel(session, now = Date.now()) {
     const end = endTime(session, now);
-    return end ? `Ends at ${formatClock(end)}` : "";
+    return end ? `Ends ${formatClock(end)}` : "";
   }
 
   return { remainingSeconds, endTime, formatClock, endsLabel };

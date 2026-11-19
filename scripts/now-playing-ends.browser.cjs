@@ -1,4 +1,4 @@
-// Browser check for the Now Playing "Ends at" line and card text size.
+// Browser check for the Now Playing "Ends HH:MM" line and card text size.
 // Serve static/ (e.g. `python3 -m http.server 18198 -d static`) or a running
 // Siloscope with AUTH_MODE=none, then: node scripts/now-playing-ends.browser.cjs
 process.env.TZ = process.env.TZ || "UTC";
@@ -20,7 +20,7 @@ const plex = [
 ];
 const clock = seconds => {
   const date = new Date(now + seconds * 1000);
-  return `Ends at ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  return `Ends ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 };
 
 async function cardMetrics(page) {
@@ -89,14 +89,12 @@ async function cardMetrics(page) {
       assert.equal(stored.cardTextScale, 150);
       await page.locator('[data-tab="playing"]').click();
       const large = await cardMetrics(page);
-      assert.ok(Math.abs(large[0].footerSize / base[0].footerSize - 1.5) < 0.02, "footer text scales to 150%");
       assert.ok(Math.abs(large[0].titleSize / base[0].titleSize - 1.5) < 0.02, "title text scales to 150%");
+      if (width >= 375) assert.ok(large[0].footerSize > base[0].footerSize, "footer text grows where there is room");
       for (const card of large) {
-        // Beside the user when there is room; otherwise wrapped onto its own line.
-        assert.ok(card.insideFooter && (Math.abs(card.avatarMid - card.whenMid) <= 1 || card.wrapped), `${card.title}: layout holds at 150%`);
-        assert.ok(card.userWidth >= card.footerSize * 2.9, `${card.title}: username keeps room`);
+        assert.ok(!card.wrapped && Math.abs(card.avatarMid - card.whenMid) <= 1 && card.insideFooter, `${card.title}: time block beside and centred on user at 150%`);
+        assert.ok(card.userWidth >= card.footerSize * 3.9, `${card.title}: username keeps ~4em at 150% (${card.userWidth.toFixed(1)}px)`);
       }
-      if (width >= 760) for (const card of large) assert.ok(!card.wrapped, `${card.title}: no wrap at ${width}px`);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "no horizontal scroll at 150%");
       await page.locator(".page-shell").evaluate(element => { element.scrollTop = 0; });
       await page.screenshot({ path: `${shots}/ends-${width}-150.png` });
@@ -105,7 +103,8 @@ async function cardMetrics(page) {
       await slider.press("Home");
       await page.locator('[data-tab="playing"]').click();
       const small = await cardMetrics(page);
-      assert.ok(Math.abs(small[0].footerSize / base[0].footerSize - 0.8) < 0.02, "footer text scales to 80%");
+      assert.ok(small[0].footerSize < base[0].footerSize, "footer text shrinks at 80%");
+      assert.ok(Math.abs(small[0].titleSize / base[0].titleSize - 0.8) < 0.02, "title text scales to 80%");
       await page.screenshot({ path: `${shots}/ends-${width}-80.png` });
 
       // The Estimated end time toggle hides the line; the start time stays.
@@ -116,7 +115,7 @@ async function cardMetrics(page) {
       await page.locator('[data-tab="playing"]').click();
       const hidden = await cardMetrics(page);
       assert.deepEqual(hidden.map(card => card.ends), ["", "", "", ""]);
-      for (const card of hidden) assert.ok(Math.abs(card.avatarMid - card.whenMid) <= 1, `${card.title}: start time centred when end time hidden`);
+      for (const card of hidden) assert.ok(!card.wrapped && Math.abs(card.avatarMid - card.whenMid) <= 1, `${card.title}: start time centred when end time hidden`);
       await page.screenshot({ path: `${shots}/ends-${width}-hidden.png` });
 
       // Reset for the Playing tab restores both.

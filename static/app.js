@@ -998,7 +998,7 @@ function createSessionCard(session) {
     const endsLabel = document.createElement("time");
     endsLabel.className = "session-ends";
     endsLabel.dateTime = ends.toISOString();
-    endsLabel.textContent = `Ends at ${PlaybackTime.formatClock(ends)}`;
+    endsLabel.textContent = `Ends ${PlaybackTime.formatClock(ends)}`;
     endsLabel.title = `Estimated finish: ${ends.toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}`;
     when.append(endsLabel);
   }

@@ -1423,14 +1423,16 @@ h2 {
 
 .session-footer {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 4px 8px;
+  gap: 8px;
   margin-top: auto;
   padding-top: 10px;
   color: var(--muted);
   font-size: calc(0.8125rem * var(--session-text-scale, 1));
-  font-size: calc(clamp(0.75rem, 0.6rem + 0.9cqi, 0.9375rem) * var(--session-text-scale, 1));
+  /* Capped by card width so avatar, at least ~4em of username and the
+     two-line start/end block always fit side by side on one row. */
+  font-size: min(calc(clamp(0.75rem, 0.6rem + 0.9cqi, 0.9375rem) * var(--session-text-scale, 1)), calc(4.4cqi - 1px));
 }
 
 .avatar {
@@ -1455,7 +1457,7 @@ h2 {
 
 .session-user {
   flex: 1 1 0;
-  min-width: 3em;
+  min-width: 0;
   overflow: hidden;
   color: var(--text);
   font-weight: 700;
@@ -1464,9 +1466,8 @@ h2 {
 }
 
 /* Start time and estimated end time: a right-aligned two-line block that the
-   footer centres vertically against the avatar and username. On very narrow
-   cards with large text it wraps onto its own line rather than squeezing the
-   username away. */
+   footer centres vertically against the avatar and username. It never wraps:
+   the footer's font size is capped by the card width (see .session-footer). */
 .session-when {
   display: flex;
   flex: 0 0 auto;
